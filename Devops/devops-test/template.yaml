@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  devops-test
+
+  Sample SAM Template for devops-test
+
+
+Resources:
+  LoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: login.handler
+      Runtime: nodejs16.x
+      Timeout: 5
+      MemorySize: 256
+      Policies: AmazonDynamoDBFullAccess
+      Events:
+        LoginPost:
+          Type: Api
+          Properties:
+            Path: /login
+            Method: post
+      Environment:
+        Variables:
+          TableName: !Ref LoginDB
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - login.ts
+
+  RegisterFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: src/
+      Handler: register.handler
+      Runtime: nodejs16.x
+      Timeout: 5
+      MemorySize: 256
+      Policies: AmazonDynamoDBFullAccess
+      Events:
+        RegisterApi:
+          Type: 'Api'
+          Properties:
+            Path: /register
+            Method: post
+      Environment:
+        Variables:
+          TableName: !Ref LoginDB
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+        - register.ts
+
+  LoginDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      TableName: LoginDB
+      AttributeDefinitions: 
+      - AttributeName: email
+        AttributeType: S
+      KeySchema:
+      - AttributeName: email
+        KeyType: HASH
